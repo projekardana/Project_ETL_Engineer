@@ -1,47 +1,74 @@
-from unittest.mock import patch, MagicMock
-from utils.extract import fetching_content, extract_fashion_data
+import pytest
+from unittest.mock import Mock, patch
+import requests
+from bs4 import BeautifulSoup
+from utils.extract import fetching_content, extract_fashion_data, scrape_fashion_data
 
-
-@patch("requests.Session.get")
-def test_fetching_content_success(mock_get):
-    mock_response = MagicMock()
-    mock_response.status_code = 200
-    mock_response.content = b"<html></html>"
+# Test 1: fetching_content Web ketika success
+def test_fetching_content_success():
+    mock_response = Mock()
     mock_response.raise_for_status.return_value = None
+    mock_response.content = b"<html></html>"
 
-    mock_get.return_value = mock_response
+    with patch("utils.extract.requests.get", return_value=mock_response):
+        content = fetching_content("https://example.com")
+        assert content == b"<html></html>"
 
-    content = fetching_content("http://dummy-url")
-    assert content == b"<html></html>"
+# Test 2 : Jika fetching_content Web ketika gagal
+def test_fetching_content_fail():
+    mock_response = Mock()
+    mock_response.raise_for_status.side_effect = requests.exceptions.HTTPError("404")
+
+    with patch("utils.extract.requests.get", return_value=mock_response):
+        content = fetching_content("https://example.com")
+        assert content is None
 
 
-@patch("requests.Session.get")
-def test_fetching_content_failed(mock_get):
-    mock_get.side_effect = Exception("Connection error")
 
-    content = fetching_content("http://dummy-url")
-    assert content is None
+# Pengujian ketiga hasil scraping extract data valid
 
-
-def test_extract_fashion_data():
+def test_extract_fashion_data_valid_card():
     html = """
     <div class="collection-card">
-        <h3>T-Shirt</h3>
-        <div class="price-container">$10</div>
+        <h3>T-shirt Test</h3>
+        <div class="price-container">$99.99</div>
+        <p>Rating: 4.5 / 5</p>
         <p>3 Colors</p>
         <p>Size: M</p>
         <p>Gender: Men</p>
     </div>
     """
-
-    from bs4 import BeautifulSoup
     soup = BeautifulSoup(html, "html.parser")
     card = soup.find("div", class_="collection-card")
 
-    data = extract_fashion_data(card)
+    result = extract_fashion_data(card)
 
-    assert data["Title"] == "T-Shirt"
-    assert data["Price"] == "$10"
-    assert data["Colors"] == "3 Colors"
-    assert data["Size"] == "Size: M"
-    assert data["Gender"] == "Gender: Men"
+    assert result["Title"] == "T-shirt Test"
+    assert result["Price"] == "$99.99"
+    assert result["Rating"] == "Rating: 4.5 / 5"
+    assert result["Colors"] == "3 Colors"
+    assert result["Size"] == "Size: M"
+    assert result["Gender"] == "Gender: Men"
+
+
+# Pengujian keempat hasil pengujian scraping_data ketika gagal
+def test_scrape_fashion_data():
+    # buat HTML page
+    html_page = """
+    <div class="collection-card">
+        <h3>T-shirt 1</h3>
+        <div class="price-container">$10.00</div>
+        <p>Rating: 5 / 5</p>
+        <p>2 Colors</p>
+        <p>Size: L</p>
+        <p>Gender: Unisex</p>
+    </div>
+    <li class="page-item next"></li>
+    """
+
+    with patch("utils.extract.fetching_content", side_effect=[html_page.encode(), None]):
+        result = scrape_fashion_data("https://example.com/")
+
+    assert len(result) == 1
+    assert result[0]["Title"] == "T-shirt 1"
+    assert result[0]["Price"] == "$10.00"

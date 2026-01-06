@@ -2,7 +2,9 @@ import time
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
+from datetime import datetime
 
+timestamp = datetime.now()
 
 HEADERS = {
     "User-Agent": (
@@ -13,14 +15,12 @@ HEADERS = {
 
 def fetching_content(url):
     """Mengambil konten HTML dari URL yang di berikan. """
-
-    session = requests.Session()
-    response = session.get(url, headers=HEADERS)
     try:
+        response = requests.get(url, headers=HEADERS, timeout=10)
         response.raise_for_status()
         return response.content
     except requests.exceptions.RequestException as e:
-        print(f"Terjadi kesalahan ketika melakukan requests terhadapat {url}: {e}")
+        print(f"Terjadi kesalahan ketika melakukan requests terdapat {url}: {e}")
         return None
 
 
@@ -47,25 +47,22 @@ def extract_fashion_data(card):
         "Rating": rating.text.strip(),
         "Colors": colors.text.strip(),
         "Size": size.text.strip(),
-        "Gender": gender.text.strip()
+        "Gender": gender.text.strip(),
+        "timestamp": timestamp
     }
 
     return fashion
 
-def scrape_fashion_data(base_url, start_page=1, delay=2):
+def scrape_fashion_data(base_url, max_pages=50, delay=0, verbose=False):
     """Fungsi utama untuk mengambil keseluruhan data, mulai dari requests hingga menyimpannya dalam variabel data."""
 
     product = []
-    page_number = start_page
+    url = base_url
+    page_count = 1
 
-    while True:
-        # khusus halaman pertama
-        if page_number == 1:
-            url = base_url
-        else:
-            url = f"{base_url}page/{page_number}"
-
-        print(f"Scrapping Halaman: {url}")
+    while page_count <= max_pages:
+        if verbose:
+            print(f"Scrapping Halaman {page_count}: {url}")
 
         content = fetching_content(url)
         if not content:
@@ -73,10 +70,7 @@ def scrape_fashion_data(base_url, start_page=1, delay=2):
 
         soup = BeautifulSoup(content, "html.parser")
         cards = soup.find_all('div', class_='collection-card')
-        print(f"Jumlah card ditemukan: {len(cards)}")
-
-        if not cards:
-            break
+        print(f"Jumlah product ditemukan: {len(cards)}")
 
         for card in cards:
             fashion = extract_fashion_data(card)
@@ -85,14 +79,17 @@ def scrape_fashion_data(base_url, start_page=1, delay=2):
 
 
         next_button = soup.find('li', class_='page-item next')
-        if next_button and next_button.find('a'):
-            next_url = next_button.find('a')['href']
+        if next_button or not next_button.find('a'):
+            break
 
-            if not next_url.startswith('http'):
-                next_url = base_url.rstrip('/') + next_url
+        next_url = next_button.find('a')["href"]
+        if not next_url.startswith('http'):
+            url = base_url.rstrip('/') + next_url
+        else:
             url = next_url
             time.sleep(delay)
-        else:
-            break # berhenti jika sudah tidak ada next button
+
+        page_count += 1
+        time.sleep(delay)
 
     return product

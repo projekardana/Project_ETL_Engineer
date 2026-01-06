@@ -1,0 +1,33 @@
+Submission ETL Pipeline Fashion Data
+
+Deskripsi:
+------------
+Proyek ini merupakan ETL pipeline yang mengambil data fashion dari situs https://fashion-studio.dicoding.dev/,
+melakukan proses Extract, Transform, dan Load (ETL), lalu menyimpannya ke berbagai storage seperti
+CSV, PostgreSQL, dan Google Sheets.
+Kode juga dilengkapi dengan unit test dan test coverage untuk memastikan pipeline berjalan dengan baik.
+
+Instruksi Menjalankan:
+----------------------
+1. Pastikan semua library telah terinstal:
+   pip install -r requirements.txt
+
+2. Jalankan ETL pipeline:
+   python3 main.py
+
+3. Jalankan unit test:
+   python3 -m pytest tests
+
+4. Jalankan test coverage:
+   coverage run -m pytest tests
+   coverage report -m
+
+5. PostgreSQL menggunakan DBMS lokal. Data disimpan secara rahasia dan dikonfigurasi melalui file .env,
+   sehingga setiap environment baru harus menyesuaikan file tersebut.
+
+Catatan:
+---------
+- Informasi koneksi database seperti username dan password bersifat rahasia dan tidak disertakan.
+- Semua skrip dan test sudah dioptimasi agar dapat dijalankan langsung tanpa konfigurasi tambahan
+  (kecuali untuk Google Sheets atau PostgreSQL).
+- Test coverage terakhir: 89%. Sebagian besar kode telah diuji, termasuk error handling dan transformasi data.
