@@ -30,4 +30,3 @@ Catatan:
 - Informasi koneksi database seperti username dan password bersifat rahasia dan tidak disertakan.
 - Semua skrip dan test sudah dioptimasi agar dapat dijalankan langsung tanpa konfigurasi tambahan
   (kecuali untuk Google Sheets atau PostgreSQL).
-- Test coverage terakhir: 89%. Sebagian besar kode telah diuji, termasuk error handling dan transformasi data.

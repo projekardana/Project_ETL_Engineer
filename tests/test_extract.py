@@ -63,11 +63,10 @@ def test_scrape_fashion_data():
         <p>Size: L</p>
         <p>Gender: Unisex</p>
     </div>
-    <li class="page-item next"></li>
     """
 
-    with patch("utils.extract.fetching_content", side_effect=[html_page.encode(), None]):
-        result = scrape_fashion_data("https://example.com/")
+    with patch("utils.extract.fetching_content", return_value=html_page.encode()):
+        result = scrape_fashion_data("https://example.com/", max_page=1)
 
     assert len(result) == 1
     assert result[0]["Title"] == "T-shirt 1"

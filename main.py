@@ -9,12 +9,13 @@ def main():
 
     BASE_URL = 'https://fashion-studio.dicoding.dev/'
 
-    all_data = scrape_fashion_data(BASE_URL, max_pages=50, verbose=False)
+    all_data = scrape_fashion_data(BASE_URL)
 
     if all_data:
+
         df_transform = transform_to_DataFrame(all_data)
         df = transform_data(df_transform, 16000)
-        print(df.head())
+        print(df.info())
 
         # Menyimpan ke CSV
         load_to_csv(df)

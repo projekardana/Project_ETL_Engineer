@@ -53,43 +53,29 @@ def extract_fashion_data(card):
 
     return fashion
 
-def scrape_fashion_data(base_url, max_pages=50, delay=0, verbose=False):
+def scrape_fashion_data(base_url, max_page=50):
     """Fungsi utama untuk mengambil keseluruhan data, mulai dari requests hingga menyimpannya dalam variabel data."""
 
     product = []
-    url = base_url
-    page_count = 1
 
-    while page_count <= max_pages:
-        if verbose:
-            print(f"Scrapping Halaman {page_count}: {url}")
+    for page in range(1, max_page + 1):
+        if page == 1:
+            url = base_url
+        else:
+            url = f"{base_url.rstrip('/')}/page{page}"
+
+        print(f"Scrapping Halaman: {url}")
 
         content = fetching_content(url)
         if not content:
-            break
+            continue
 
         soup = BeautifulSoup(content, "html.parser")
         cards = soup.find_all('div', class_='collection-card')
-        print(f"Jumlah product ditemukan: {len(cards)}")
 
         for card in cards:
             fashion = extract_fashion_data(card)
             if fashion:
                 product.append(fashion)
-
-
-        next_button = soup.find('li', class_='page-item next')
-        if next_button or not next_button.find('a'):
-            break
-
-        next_url = next_button.find('a')["href"]
-        if not next_url.startswith('http'):
-            url = base_url.rstrip('/') + next_url
-        else:
-            url = next_url
-            time.sleep(delay)
-
-        page_count += 1
-        time.sleep(delay)
 
     return product

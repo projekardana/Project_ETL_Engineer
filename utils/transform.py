@@ -23,8 +23,8 @@ def transform_data(product, exchange_rate):
 
         #Transformasi Price ke Rupiah
         product['Price'] = (
-            product['Price'].str.replace("$", "", regex=False).astype(float) * exchange_rate
-        ).astype(int)
+            product['Price'].str.replace("$", "", regex=False).astype(float) * float(exchange_rate)
+        ).astype("float64")
 
         # Transformasi Rating
         product['Rating'] = (
@@ -42,7 +42,7 @@ def transform_data(product, exchange_rate):
         # Transformasi Gender
         product["Gender"] = product["Gender"].str.replace("Gender: ", "", regex=False)
 
-        product["Title"] = product["Title"].astype("string")
+        product["Title"] = product["Title"].str.replace("Title: ", "", regex=False)
 
         data = product.reset_index(drop=True)
         return data
